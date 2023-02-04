@@ -4,14 +4,10 @@ import { RateLimiterMemory } from 'rate-limiter-flexible'
 import bodyParser from 'body-parser'
 import expressJSDocSwagger from 'express-jsdoc-swagger'
 
-interface IRouter {
-  getRouter: () => Router
-}
-
 export default class App {
   protected app: Application
 
-  constructor (routers: IRouter[]) {
+  constructor (routers: Router[]) {
     this.app = express()
     this.config()
     this.mountRoutes(routers)
@@ -37,9 +33,9 @@ export default class App {
     return rateLimiterMiddleware
   }
 
-  private mountRoutes (routers: IRouter[]): void {
+  private mountRoutes (routers: Router[]): void {
     routers.forEach((router) => {
-      this.app.use('/api/v1', router.getRouter())
+      this.app.use('/api/v1', router)
     })
   }
 
@@ -61,7 +57,7 @@ export default class App {
       // Base directory which we use to locate your JSDOC files
       baseDir: __dirname,
       // Glob pattern to find your jsdoc files (multiple patterns can be added in an array)
-      filesPattern: './apiServices/**/*.router.ts',
+      filesPattern: ['./apiServices/**/*.router.ts', './services/*.service.ts'],
       // URL where SwaggerUI will be rendered
       swaggerUIPath: '/api-docs',
       // Expose OpenAPI UI

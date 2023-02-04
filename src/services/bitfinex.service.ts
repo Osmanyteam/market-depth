@@ -2,9 +2,37 @@ import Websocket from 'ws'
 import crypto from 'crypto-js'
 import { type PartialBy } from '../core/types'
 
+/**
+ * A Bid/Ask pair
+ * @typedef {object} BidAskPair
+ * @property {number} bid - Bid price
+ * @property {number} bidSize - Bid size
+ * @property {number} ask - Ask price
+ * @property {number} askSize - Ask size
+ * @property {number} dailyChange - Daily change
+ * @property {number} dailyChangeRelative - Daily change relative
+ * @property {number} lastPrice - Last price
+ * @property {number} volume - Volume
+ * @property {number} high - High
+ * @property {number} low - Low
+ */
 export enum TOKEN_SYMBOLS {
   BTCUSD = 'tBTCUSD',
   ETHUSD = 'tETHUSD',
+}
+
+export interface IPair {
+  chainId: number
+  bid: number
+  bidSize: number
+  ask: number
+  askSize: number
+  dailyChange: number
+  dailyChangeRelative: number
+  lastPrice: number
+  volume: number
+  high: number
+  low: number
 }
 
 export function isTokenSymbol (tokenSymbol: string): asserts tokenSymbol is TOKEN_SYMBOLS {
@@ -34,7 +62,7 @@ export default class BitfinexService {
   }
 
   // get property for pairBTCUSD
-  get pairBTCUSD (): Omit<typeof this._pairBTCUSD, 'chainId'> {
+  get pairBTCUSD (): Omit<IPair, 'chainId'> {
     const pairClone: PartialBy<typeof this._pairBTCUSD, 'chainId'> = Object.assign({}, this._pairBTCUSD)
     delete pairClone.chainId
     return pairClone
@@ -54,8 +82,8 @@ export default class BitfinexService {
     low: 0
   }
 
-  // get property for pairBTCUSD
-  get pairETHUSD (): Omit<typeof this._pairETHUSD, 'chainId'> {
+  // get property for pairETHUSD
+  get pairETHUSD (): Omit<IPair, 'chainId'> {
     const pairClone: PartialBy<typeof this._pairETHUSD, 'chainId'> = Object.assign({}, this._pairETHUSD)
     delete pairClone.chainId
     return pairClone
@@ -118,10 +146,16 @@ export default class BitfinexService {
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       const parsedData = JSON.parse(data.toString())
       if (parsedData.event === 'subscribed') {
-        if (parsedData.symbol === TOKEN_SYMBOLS.BTCUSD) {
+        if (parsedData.channel === 'ticker' && parsedData.symbol === TOKEN_SYMBOLS.BTCUSD) {
           this._pairBTCUSD.chainId = parsedData.chanId
         } else if (parsedData.symbol === TOKEN_SYMBOLS.ETHUSD) {
           this._pairETHUSD.chainId = parsedData.chanId
+        } else if (parsedData.channel === 'book') {
+          if (parsedData.symbol === TOKEN_SYMBOLS.BTCUSD) {
+            this._pairBTCUSD.chainId = parsedData.chanId
+          } else if (parsedData.symbol === TOKEN_SYMBOLS.ETHUSD) {
+            this._pairETHUSD.chainId = parsedData.chanId
+          }
         }
       } else {
         if (parsedData[0] === this._pairBTCUSD.chainId) {
@@ -134,7 +168,6 @@ export default class BitfinexService {
   }
 
   private setBidAskBTCUSD (parsedData: any): void {
-    // console.log('setBidAskBTCUSD', parsedData)
     if (typeof parsedData[1] !== 'object') {
       return
     }
@@ -149,11 +182,9 @@ export default class BitfinexService {
     this._pairBTCUSD.volume = tradingPair[7]
     this._pairBTCUSD.high = tradingPair[8]
     this._pairBTCUSD.low = tradingPair[9]
-    // console.log(this._pairBTCUSD)
   }
 
   private setBidAskETHUSD (parsedData: any): void {
-    // console.log('setBidAskETHUSD', parsedData)
     if (typeof parsedData[1] !== 'object') {
       return
     }
@@ -168,6 +199,26 @@ export default class BitfinexService {
     this._pairETHUSD.volume = tradingPair[7]
     this._pairETHUSD.high = tradingPair[8]
     this._pairETHUSD.low = tradingPair[9]
-    // console.log(this._pairETHUSD)
+  }
+
+  public calculateTradeAmount (
+    tokenSymbol: TOKEN_SYMBOLS,
+    amount: number,
+    typeOperation: 'sell' | 'buy'
+  ): number {
+    if (tokenSymbol === TOKEN_SYMBOLS.BTCUSD) {
+      if (typeOperation === 'sell') {
+        return amount * this._pairBTCUSD.ask
+      } else {
+        return amount * this._pairBTCUSD.bid
+      }
+    } else if (tokenSymbol === TOKEN_SYMBOLS.ETHUSD) {
+      if (typeOperation === 'sell') {
+        return amount * this._pairETHUSD.ask
+      } else {
+        return amount * this._pairETHUSD.bid
+      }
+    }
+    throw new Error('Token symbol not found')
   }
 }
