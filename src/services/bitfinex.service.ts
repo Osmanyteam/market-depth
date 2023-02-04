@@ -35,7 +35,9 @@ export interface IPair {
   low: number
 }
 
-export function isTokenSymbol (tokenSymbol: string): asserts tokenSymbol is TOKEN_SYMBOLS {
+export function isTokenSymbol (
+  tokenSymbol: string
+): asserts tokenSymbol is TOKEN_SYMBOLS {
   if (!Object.values(TOKEN_SYMBOLS).includes(tokenSymbol as TOKEN_SYMBOLS)) {
     throw new Error('Token symbol is not valid')
   }
@@ -63,7 +65,8 @@ export default class BitfinexService {
 
   // get property for pairBTCUSD
   get pairBTCUSD (): Omit<IPair, 'chainId'> {
-    const pairClone: PartialBy<typeof this._pairBTCUSD, 'chainId'> = Object.assign({}, this._pairBTCUSD)
+    const pairClone: PartialBy<typeof this._pairBTCUSD, 'chainId'> =
+      Object.assign({}, this._pairBTCUSD)
     delete pairClone.chainId
     return pairClone
   }
@@ -84,7 +87,8 @@ export default class BitfinexService {
 
   // get property for pairETHUSD
   get pairETHUSD (): Omit<IPair, 'chainId'> {
-    const pairClone: PartialBy<typeof this._pairETHUSD, 'chainId'> = Object.assign({}, this._pairETHUSD)
+    const pairClone: PartialBy<typeof this._pairETHUSD, 'chainId'> =
+      Object.assign({}, this._pairETHUSD)
     delete pairClone.chainId
     return pairClone
   }
@@ -111,7 +115,9 @@ export default class BitfinexService {
   protected generateAuthNonce (): string {
     const authNonce = Date.now() * 1000 // Generate an ever increasing, single use value. (a timestamp satisfies this criteria)
     const authPayload = `AUTH${authNonce}` // Compile the authentication payload, this is simply the string 'AUTH' prepended to the nonce value
-    const authSig = crypto.HmacSHA384(authPayload, this.secretKey).toString(crypto.enc.Hex) // The authentication payload is hashed using the private key, the resulting hash is output as a hexadecimal string
+    const authSig = crypto
+      .HmacSHA384(authPayload, this.secretKey)
+      .toString(crypto.enc.Hex) // The authentication payload is hashed using the private key, the resulting hash is output as a hexadecimal string
     return JSON.stringify({
       apiKey: this.apiKey, // API key
       authSig, // Authentication Sig
@@ -146,7 +152,10 @@ export default class BitfinexService {
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       const parsedData = JSON.parse(data.toString())
       if (parsedData.event === 'subscribed') {
-        if (parsedData.channel === 'ticker' && parsedData.symbol === TOKEN_SYMBOLS.BTCUSD) {
+        if (
+          parsedData.channel === 'ticker' &&
+          parsedData.symbol === TOKEN_SYMBOLS.BTCUSD
+        ) {
           this._pairBTCUSD.chainId = parsedData.chanId
         } else if (parsedData.symbol === TOKEN_SYMBOLS.ETHUSD) {
           this._pairETHUSD.chainId = parsedData.chanId

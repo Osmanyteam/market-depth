@@ -1,4 +1,3 @@
-
 import { type Request, type Response } from 'express'
 import { z } from 'zod'
 import { ValidateController } from '../../core/decorators'
@@ -42,7 +41,8 @@ export default class PairTradeController {
   })
   public async calculatePairTrade (req: Request, res: Response): Promise<void> {
     const { tokenSymbol, amount, type } = req.body
-    const pairTradeAmount = await this.pairTradeService.calculatePairTrade(tokenSymbol, amount, type)
+    const pairTradeAmount = await this.pairTradeService
+      .calculatePairTrade(tokenSymbol, amount, type)
     res.json({ price: pairTradeAmount })
   }
 }

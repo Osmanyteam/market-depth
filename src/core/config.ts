@@ -7,7 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 enum NODE_ENV {
   development = 'development',
   production = 'production',
-  test = 'test'
+  test = 'test',
 }
 const schema = z.object({
   NODE_ENV: z.nativeEnum(NODE_ENV),
