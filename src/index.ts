@@ -1,4 +1,6 @@
-import App from './app';
+import App from './app'
+import config from './core/config'
+import PairTradeRouter from './apiServices/pairTrade/pairTrade.router'
 
-const app = new App();
-app.listen();
+const app = new App([new PairTradeRouter()])
+app.listen(Number(config.PORT))

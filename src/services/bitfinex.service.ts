@@ -1,0 +1,173 @@
+import Websocket from 'ws'
+import crypto from 'crypto-js'
+import { type PartialBy } from '../core/types'
+
+export enum TOKEN_SYMBOLS {
+  BTCUSD = 'tBTCUSD',
+  ETHUSD = 'tETHUSD',
+}
+
+export function isTokenSymbol (tokenSymbol: string): asserts tokenSymbol is TOKEN_SYMBOLS {
+  if (!Object.values(TOKEN_SYMBOLS).includes(tokenSymbol as TOKEN_SYMBOLS)) {
+    throw new Error('Token symbol is not valid')
+  }
+}
+
+export default class BitfinexService {
+  protected readonly ws: Websocket
+  private readonly apiKey: string
+  private readonly secretKey: string
+  protected isOpen = false
+
+  protected _pairBTCUSD = {
+    chainId: 0,
+    bid: 0,
+    bidSize: 0,
+    ask: 0,
+    askSize: 0,
+    dailyChange: 0,
+    dailyChangeRelative: 0,
+    lastPrice: 0,
+    volume: 0,
+    high: 0,
+    low: 0
+  }
+
+  // get property for pairBTCUSD
+  get pairBTCUSD (): Omit<typeof this._pairBTCUSD, 'chainId'> {
+    const pairClone: PartialBy<typeof this._pairBTCUSD, 'chainId'> = Object.assign({}, this._pairBTCUSD)
+    delete pairClone.chainId
+    return pairClone
+  }
+
+  protected _pairETHUSD = {
+    chainId: 0,
+    bid: 0,
+    bidSize: 0,
+    ask: 0,
+    askSize: 0,
+    dailyChange: 0,
+    dailyChangeRelative: 0,
+    lastPrice: 0,
+    volume: 0,
+    high: 0,
+    low: 0
+  }
+
+  // get property for pairBTCUSD
+  get pairETHUSD (): Omit<typeof this._pairETHUSD, 'chainId'> {
+    const pairClone: PartialBy<typeof this._pairETHUSD, 'chainId'> = Object.assign({}, this._pairETHUSD)
+    delete pairClone.chainId
+    return pairClone
+  }
+
+  constructor (apiKey: string, secretKey: string) {
+    this.apiKey = apiKey
+    this.secretKey = secretKey
+    this.ws = new Websocket('wss://api-pub.bitfinex.com/ws/2')
+    void this.getPairOrderBook()
+  }
+
+  private async waitIsOpen (): Promise<void> {
+    if (!this.isOpen) {
+      await new Promise((resolve) => {
+        this.ws.on('open', () => {
+          this.ws.send(this.generateAuthNonce())
+          this.isOpen = true
+          resolve(0)
+        })
+      })
+    }
+  }
+
+  protected generateAuthNonce (): string {
+    const authNonce = Date.now() * 1000 // Generate an ever increasing, single use value. (a timestamp satisfies this criteria)
+    const authPayload = `AUTH${authNonce}` // Compile the authentication payload, this is simply the string 'AUTH' prepended to the nonce value
+    const authSig = crypto.HmacSHA384(authPayload, this.secretKey).toString(crypto.enc.Hex) // The authentication payload is hashed using the private key, the resulting hash is output as a hexadecimal string
+    return JSON.stringify({
+      apiKey: this.apiKey, // API key
+      authSig, // Authentication Sig
+      authNonce,
+      authPayload,
+      event: 'auth' // Authentication Event
+    })
+  }
+
+  public async getPairOrderBook (): Promise<void> {
+    // we wait to open ws connection
+    await this.waitIsOpen()
+    // we subscribe to ticker
+    this.ws.send(
+      JSON.stringify({
+        event: 'subscribe',
+        channel: 'ticker',
+        symbol: TOKEN_SYMBOLS.BTCUSD
+      })
+    )
+    this.ws.send(
+      JSON.stringify({
+        event: 'subscribe',
+        channel: 'ticker',
+        symbol: TOKEN_SYMBOLS.ETHUSD
+      })
+    )
+
+    // we listen to messages
+    // using chainId to identify the pair
+    this.ws.on('message', (data) => {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      const parsedData = JSON.parse(data.toString())
+      if (parsedData.event === 'subscribed') {
+        if (parsedData.symbol === TOKEN_SYMBOLS.BTCUSD) {
+          this._pairBTCUSD.chainId = parsedData.chanId
+        } else if (parsedData.symbol === TOKEN_SYMBOLS.ETHUSD) {
+          this._pairETHUSD.chainId = parsedData.chanId
+        }
+      } else {
+        if (parsedData[0] === this._pairBTCUSD.chainId) {
+          this.setBidAskBTCUSD(parsedData)
+        } else if (parsedData[0] === this._pairETHUSD.chainId) {
+          this.setBidAskETHUSD(parsedData)
+        }
+      }
+    })
+  }
+
+  private setBidAskBTCUSD (parsedData: any): void {
+    // console.log('setBidAskBTCUSD', parsedData)
+    if (typeof parsedData[1] !== 'object') {
+      return
+    }
+    const tradingPair = parsedData[1]
+    this._pairBTCUSD.bid = tradingPair[0]
+    this._pairBTCUSD.bidSize = tradingPair[1]
+    this._pairBTCUSD.ask = tradingPair[2]
+    this._pairBTCUSD.askSize = tradingPair[3]
+    this._pairBTCUSD.dailyChange = tradingPair[4]
+    this._pairBTCUSD.dailyChangeRelative = tradingPair[5]
+    this._pairBTCUSD.lastPrice = tradingPair[6]
+    this._pairBTCUSD.volume = tradingPair[7]
+    this._pairBTCUSD.high = tradingPair[8]
+    this._pairBTCUSD.low = tradingPair[9]
+    // console.log(this._pairBTCUSD)
+  }
+
+  private setBidAskETHUSD (parsedData: any): void {
+    // console.log('setBidAskETHUSD', parsedData)
+    if (typeof parsedData[1] !== 'object') {
+      return
+    }
+    const tradingPair = parsedData[1]
+    this._pairETHUSD.bid = tradingPair[0]
+    this._pairETHUSD.bidSize = tradingPair[1]
+    this._pairETHUSD.ask = tradingPair[2]
+    this._pairETHUSD.askSize = tradingPair[3]
+    this._pairETHUSD.dailyChange = tradingPair[4]
+    this._pairETHUSD.dailyChangeRelative = tradingPair[5]
+    this._pairETHUSD.lastPrice = tradingPair[6]
+    this._pairETHUSD.volume = tradingPair[7]
+    this._pairETHUSD.high = tradingPair[8]
+    this._pairETHUSD.low = tradingPair[9]
+    // console.log(this._pairETHUSD)
+  }
+}
