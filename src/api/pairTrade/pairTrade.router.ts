@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import PairTradeController from './pairTrade.controller'
+import PairTradeController from '@api/pairTrade/pairTrade.controller'
 import { type Request, type Response, Router } from 'express'
-import PairTradeService from './pairTrade.service'
-import BitfinexService from '../../services/bitfinex.service'
+import PairTradeService from '@api/pairTrade/pairTrade.service'
+import BitfinexService from '@services/bitfinex.service'
 
 const pairTradeController = new PairTradeController(
   new PairTradeService(new BitfinexService())

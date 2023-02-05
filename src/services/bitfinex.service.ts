@@ -1,5 +1,5 @@
 import Websocket from 'ws'
-import { type PartialBy } from '../core/types'
+import { type PartialBy } from '@core/types'
 
 /**
  * A Bid/Ask pair

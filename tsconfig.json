@@ -15,7 +15,14 @@
       /* Advanced Options */
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
-      "experimentalDecorators": true
+      "experimentalDecorators": true,
+      "paths": {
+        "@src/*": ["./*"],
+        "@core/*": ["./core/*"],
+        "@services/*": ["./services/*"],
+        "@api/*": ["./api/*"],
+        "@app": ["./app"],
+      }
   },
   "lib": ["es2015"],
   "include": ["src/**/*"],

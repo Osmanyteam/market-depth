@@ -10,6 +10,8 @@ import helmet from 'helmet'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
 import bodyParser from 'body-parser'
 import expressJSDocSwagger from 'express-jsdoc-swagger'
+import morgan from 'morgan'
+import logger from '@core/logging'
 
 export default class App {
   public app: Application
@@ -64,7 +66,7 @@ export default class App {
       // Base directory which we use to locate your JSDOC files
       baseDir: __dirname,
       // Glob pattern to find your jsdoc files (multiple patterns can be added in an array)
-      filesPattern: ['./apiServices/**/*.router.ts', './services/*.service.ts'],
+      filesPattern: ['./api/**/*.router.ts', './services/*.service.ts'],
       // URL where SwaggerUI will be rendered
       swaggerUIPath: '/api-docs',
       // Expose OpenAPI UI
@@ -90,11 +92,13 @@ export default class App {
     this.app.disable('x-powered-by')
     this.app.use(this.getRateLimits())
     this.app.use(bodyParser.json({ limit: '1mb' }))
+    const logger = morgan(':method :url :status :res[content-length] - :response-time ms')
+    this.app.use(logger)
   }
 
   public listen (port: number): App {
     this.app.listen(port, () => {
-      console.log(`Server is listening on port ${port}!`)
+      logger.info(`Server is listening on port ${port}!`)
     })
     return this
   }

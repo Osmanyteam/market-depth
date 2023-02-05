@@ -3,5 +3,6 @@
         "BITFINEX",
         "BTCUSD",
         "ETHUSD"
-    ]
+    ],
+    "typescript.preferences.importModuleSpecifier": "non-relative"
 }

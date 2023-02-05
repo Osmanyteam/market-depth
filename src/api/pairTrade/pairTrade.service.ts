@@ -1,5 +1,5 @@
-import type BitfinexService from '../../services/bitfinex.service'
-import { type IPair, isTokenSymbol, TOKEN_SYMBOLS } from '../../services/bitfinex.service'
+import type BitfinexService from '@services/bitfinex.service'
+import { type IPair, isTokenSymbol, TOKEN_SYMBOLS } from '@services/bitfinex.service'
 
 export default class PairTradeService {
   protected readonly bitfinexService: BitfinexService

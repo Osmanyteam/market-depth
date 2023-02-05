@@ -1,8 +1,8 @@
 import { type Request, type Response } from 'express'
 import { z } from 'zod'
-import { ValidateController } from '../../core/decorators'
-import { isTokenSymbol, type TOKEN_SYMBOLS } from '../../services/bitfinex.service'
-import type PairTradeService from './pairTrade.service'
+import { ValidateController } from '@core/decorators'
+import { isTokenSymbol, type TOKEN_SYMBOLS } from '@services/bitfinex.service'
+import type PairTradeService from '@api/pairTrade/pairTrade.service'
 
 const tokenSymbolValidation = z.string().refine((value: string) => {
   try {
