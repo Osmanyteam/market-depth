@@ -3,10 +3,9 @@ import PairTradeController from './pairTrade.controller'
 import { type Request, type Response, Router } from 'express'
 import PairTradeService from './pairTrade.service'
 import BitfinexService from '../../services/bitfinex.service'
-import config from '../../core/config'
 
 const pairTradeController = new PairTradeController(
-  new PairTradeService(new BitfinexService(config.BITFINEX_API_KEY, config.BITFINEX_SECRET_KEY))
+  new PairTradeService(new BitfinexService())
 )
 
 const router = Router()

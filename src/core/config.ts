@@ -2,7 +2,11 @@ import * as dotenv from 'dotenv'
 import { z } from 'zod'
 import path from 'path'
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') })
+dotenv.config({
+  path: process.env.NODE_ENV === 'test'
+    ? path.resolve(__dirname, '../../.env')
+    : path.resolve(__dirname, '../../.env')
+})
 
 enum NODE_ENV {
   development = 'development',
@@ -11,9 +15,7 @@ enum NODE_ENV {
 }
 const schema = z.object({
   NODE_ENV: z.nativeEnum(NODE_ENV),
-  PORT: z.string().default('3000'),
-  BITFINEX_API_KEY: z.string().min(43),
-  BITFINEX_SECRET_KEY: z.string().min(43)
+  PORT: z.string().default('3000')
 })
 
 type configType = z.infer<typeof schema>

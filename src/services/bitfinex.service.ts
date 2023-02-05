@@ -1,5 +1,4 @@
 import Websocket from 'ws'
-import crypto from 'crypto-js'
 import { type PartialBy } from '../core/types'
 
 /**
@@ -45,8 +44,6 @@ export function isTokenSymbol (
 
 export default class BitfinexService {
   protected readonly ws: Websocket
-  private readonly apiKey: string
-  private readonly secretKey: string
   protected isOpen = false
 
   protected _pairBTCUSD = {
@@ -93,9 +90,7 @@ export default class BitfinexService {
     return pairClone
   }
 
-  constructor (apiKey: string, secretKey: string) {
-    this.apiKey = apiKey
-    this.secretKey = secretKey
+  constructor () {
     this.ws = new Websocket('wss://api-pub.bitfinex.com/ws/2')
     void this.getPairOrderBook()
   }
@@ -104,27 +99,11 @@ export default class BitfinexService {
     if (!this.isOpen) {
       await new Promise((resolve) => {
         this.ws.on('open', () => {
-          this.ws.send(this.generateAuthNonce())
           this.isOpen = true
           resolve(0)
         })
       })
     }
-  }
-
-  protected generateAuthNonce (): string {
-    const authNonce = Date.now() * 1000 // Generate an ever increasing, single use value. (a timestamp satisfies this criteria)
-    const authPayload = `AUTH${authNonce}` // Compile the authentication payload, this is simply the string 'AUTH' prepended to the nonce value
-    const authSig = crypto
-      .HmacSHA384(authPayload, this.secretKey)
-      .toString(crypto.enc.Hex) // The authentication payload is hashed using the private key, the resulting hash is output as a hexadecimal string
-    return JSON.stringify({
-      apiKey: this.apiKey, // API key
-      authSig, // Authentication Sig
-      authNonce,
-      authPayload,
-      event: 'auth' // Authentication Event
-    })
   }
 
   public async getPairOrderBook (): Promise<void> {

@@ -12,7 +12,7 @@ import bodyParser from 'body-parser'
 import expressJSDocSwagger from 'express-jsdoc-swagger'
 
 export default class App {
-  protected app: Application
+  public app: Application
 
   constructor (routers: Router[]) {
     this.app = express()
