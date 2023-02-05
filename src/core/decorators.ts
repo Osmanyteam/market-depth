@@ -1,3 +1,5 @@
+import config from '@src/core/config'
+import logger from '@src/core/logging'
 import { type Response, type Request } from 'express'
 import { type z } from 'zod'
 
@@ -24,7 +26,14 @@ export function ValidateController (schemaValidation: ISchemaValidation) {
       if (paramsResult?.success === false) {
         return res.status(400).json({ message: 'Bad request', error: paramsResult.error.issues })
       }
-      return originalMethod.apply(this, [req, res])
+      // we catch errors in the controller
+      originalMethod.apply(this, [req, res]).catch((err: Error & { apiCode?: number }) => {
+        logger.error(err.message)
+        res.status((err.apiCode != null) ? Number(err.apiCode) : 500).json({
+          message: config.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+          stack: config.NODE_ENV === 'production' ? undefined : err.stack
+        })
+      })
     }
     return descriptor
   }

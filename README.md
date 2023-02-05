@@ -16,6 +16,7 @@ src
     core                    // platform share
         config.ts           // environment variables
         decorators.ts       // utils decorator
+        apiError.ts         // to handle custom error with specified code status in response
         logging.ts          // custom logger
         types.ts            // custom types
     services                // Share services/Share business requirements
