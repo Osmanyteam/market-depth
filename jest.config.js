@@ -8,5 +8,6 @@ module.exports = {
     '@services/(.*)': '<rootDir>/src/services/$1',
     '@api/(.*)': '<rootDir>/src/api/$1',
     '@app/(.*)': '<rootDir>/src/app/$1'
-  }
+  },
+  testPathIgnorePatterns: ['build', 'node_modules']
 }
