@@ -20,7 +20,6 @@ export default class App {
     this.app = express()
     this.config()
     this.mountRoutes(routers)
-    this.setupSwagger()
   }
 
   private getRateLimits (): (req: Request, res: Response, next: NextFunction) => void {
@@ -48,7 +47,24 @@ export default class App {
     })
   }
 
-  private setupSwagger (): void {
+  public setupSwagger (config: {
+    version: string
+    title: string
+    license: {
+      name: string
+    }
+    security: {
+      BasicAuth: {
+        type: string
+        scheme: string
+      }
+    }
+    filesPattern: string[]
+    swaggerUIPath: string
+    exposeSwaggerUI: boolean
+    exposeApiDocs: boolean
+    apiDocsPath: string
+  }): void {
     const options = {
       info: {
         version: '1.0.0',
@@ -84,7 +100,7 @@ export default class App {
       // multiple option in case you want more that one instance
       multiple: true
     }
-    expressJSDocSwagger(this.app)(options)
+    expressJSDocSwagger(this.app)(Object.assign(config, options))
   }
 
   private config (): void {

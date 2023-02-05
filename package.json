@@ -9,14 +9,18 @@
     "dev": "nodemon",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "test": "jest --runInBand --forceExit"
+    "test": "jest --runInBand --forceExit",
+    "test:watch": "jest --watch --runInBand --forceExit"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Osmanyteam/market-depth.git"
   },
-  "author": "",
+  "author": "osmany jiron",
   "license": "ISC",
+  "engines": {
+    "node": ">=16.15.1"
+  },
   "bugs": {
     "url": "https://github.com/Osmanyteam/market-depth/issues"
   },
